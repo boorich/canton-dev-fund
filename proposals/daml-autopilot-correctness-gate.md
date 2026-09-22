@@ -1,8 +1,8 @@
-# Development Fund Proposal: daml_reason
+# Development Fund Proposal: canton-corpus-bundle
 **Author:** ChainSafe Systems / daml_reason Team
 **Status:** Draft
 **Created:** 2026-03-24
-**Revised:** 2026-09-11
+**Revised:** 2026-09-22
 **Label:** daml-tooling
 **Champion:** Need Champion
  
@@ -10,7 +10,7 @@
  
 ## Summary
  
-daml_reason is a correctness gate for Daml code, callable by any AI agent building on Canton. It answers one question: does this code match the stated business intent, checked against a maintained corpus of production-verified Daml patterns, and how confident is that answer. When the corpus doesn't cover the case in front of it, it says so and hands off to a human, rather than guessing.
+This proposal funds `canton-corpus-bundle`: a versioned, openly licensed corpus of production-verified Daml patterns. Any correctness gate built on that corpus answers one question: does this code match the stated business intent, checked against the published patterns, and how confident is that answer. When the corpus does not cover the case in front of it, an honest consumer says so and hands off to a human, rather than guessing.
  
 The system has four layers, and this proposal only funds one of them:
  
@@ -22,10 +22,10 @@ flowchart LR
 ```
  
 1. **llm-agent**: whatever wrote the code, Claude Code, Cursor, Daml Studio, an autonomous agent, anything. Not part of this project.
-2. **daml_reason**: the tool interface, an MCP tool that takes a business intent and a piece of Daml code and returns a verdict, a confidence score, and the corpus entries that verdict is grounded in.
+2. **daml_reason**: the tool interface, an MCP tool that takes a business intent and a piece of Daml code and returns a verdict, a confidence score, and the corpus entries that verdict is grounded in. This is a specification any team can implement against the open corpus; ChainSafe's own implementation is described under `canton-mcp-go-server` below.
 3. **canton-mcp-go-server**: ChainSafe's server implementing that interface, the delivery mechanism that gets a corpus-grounded verdict to an agent in practice. This is ChainSafe's product. It is not funded or open-sourced by this proposal.
 4. **canton-corpus-bundle**: the corpus itself, verified Daml patterns, anti-patterns, and tests. This proposal funds building it out and publishing it openly, CC-BY-SA 4.0, on a regular release cadence.
-ChainSafe operates a hosted, authenticated, on-chain-billed deployment of `canton-mcp-go-server` under the `daml_reason` name, with an SLA. That commercial deployment is not funded by this grant. What the grant guarantees is that `canton-corpus-bundle` itself, the verified patterns, anti-patterns, and tests, can never be taken hostage by ChainSafe's continued involvement: the data is open regardless of what happens to any single company operating on top of it. It does not guarantee that ChainSafe's specific server is replicable, and that boundary is intentional, not an oversight.
+ChainSafe operates a hosted, authenticated deployment of `canton-mcp-go-server` under the `daml_reason` name. That commercial deployment is not funded by this grant. What the grant guarantees is that `canton-corpus-bundle` itself, the verified patterns, anti-patterns, and tests, can never be taken hostage by ChainSafe's continued involvement: the data is open regardless of what happens to any single company operating on top of it. It does not guarantee that ChainSafe's specific server is replicable, and that boundary is intentional, not an oversight.
  
 This proposal was first submitted to this fund in March 2026 as "Daml Autopilot." The problem it addresses, no systematic, automated correctness check for AI-generated Daml, remains unaddressed by any other public tooling six months later, and the volume of AI-generated Daml reaching production has grown in that interval, not shrunk.
  
@@ -37,30 +37,30 @@ This is not being proposed as a replacement for, or a competitor to, Daml securi
  
 Audit practice today is calibrated to a specific regime: a bounded number of contracts, written by people who understand Daml's authorization model, reviewed by expert auditors before anything reaches a live ledger. That regime has held up well. It has no urgent gap right now.
  
-The regime this proposal is for doesn't fully exist yet, which is exactly why it's easy to underweight. As AI agents write more of the Daml reaching production, on behalf of people with no exposure to the authorization model at all, the volume of code entering the pipeline stops being bounded by how fast a qualified human can type. No audit process scales to absorb that, and none is meant to. daml_reason is not trying to be a faster or cheaper version of an audit. It's a triage layer in front of one: it narrows what reaches a human reviewer's attention, and it is explicit, by design, about the boundary of what it actually knows.
+The regime this proposal is for doesn't fully exist yet, which is exactly why it's easy to underweight. As AI agents write more of the Daml reaching production, on behalf of people with no exposure to the authorization model at all, the volume of code entering the pipeline stops being bounded by how fast a qualified human can type. No audit process scales to absorb that, and none is meant to. This proposal is not asking for a faster or cheaper audit. The corpus is a triage layer in front of one: it gives any downstream tool a maintained body of verified precedent to check against, and it is explicit, by design, about the boundary of what it actually covers.
  
 Two consequences follow from that framing, and both are load-bearing for how this proposal should be evaluated:
  
 **It should never be judged on whether it catches everything an audit would catch.** No corpus-grounded system can make that guarantee, and no version of this proposal, however well-funded, changes that. What it can be judged on is whether it's honest about the difference between what it has verified and what it hasn't.
  
-**It should be judged on its behavior at the edge of its own knowledge.** A system like this fails in one of two ways: it misses something and says nothing, or it misses something and reports false confidence. The first is a known, disclosed limitation. The second is dangerous, and is the specific failure mode the Design Invariants below are written to make structurally impossible.
+**It should be judged on how the corpus behaves at the edge of its own coverage.** A corpus like this fails in one of two ways: it leaves a gap and says nothing, or it leaves a gap and presents the nearest weak hit as a verified match. The first is a known, disclosed limitation. The second is dangerous, and is the specific failure mode the Design Invariants below are written to make structurally impossible.
  
 ---
  
 ## Design Invariants
  
-These are conditions of milestone acceptance, tested against the benchmark suite before each corpus release, not design aspirations:
+These are properties of the published corpus, not of any one server built on top of it. Invariant 1 is a condition of milestone acceptance, tested against the benchmark suite before each release. Invariants 2 and 3 are properties the artifact must expose so any consumer can fail closed, rather than invent confidence where coverage is thin.
  
-1. **Monotonic promotion.** A new corpus version is published only if its retrieval quality does not regress against the prior version's benchmark suite. A candidate update that lowers confidence-calibration accuracy on any existing benchmark query is rejected before publication, not caught after.
-2. **Bounded confidence.** Every verdict reports the retrieval basis it was computed from. `daml_reason` never returns a high-confidence verdict on a taxonomy node where corpus coverage is insufficient; it returns `delegate` instead, explicitly declining to approve.
-3. **Deterministic delegation.** Delegation to a human reviewer is a first-class output, not a fallback for tool failure. Code the gate cannot ground in the corpus at the required confidence threshold is routed to a human, every time, with no override path that silently raises confidence to avoid delegation.
-Ground truth for correct Daml is itself about to start moving, most concretely as OpenZeppelin's forthcoming Canton reference implementations are published and revised. Any tool, generator or checker, that works from a frozen snapshot of that standard drifts out of sync with it silently. These three invariants are what let `canton-corpus-bundle` stay synchronized to a moving standard honestly: republished on a fixed cadence, never certifying code against a version of the standard that's already gone stale, and saying so plainly whenever it can't.
+1. **Monotonic promotion.** A new corpus version is published only if its retrieval quality does not regress against the prior version's benchmark suite. A candidate update that lowers retrieval quality on any existing benchmark query is rejected before publication, not caught after.
+2. **Bounded confidence.** Every published taxonomy node carries enough retrieval evidence that a consumer can tell a grounded hit from an uncovered case. A node that cannot meet the benchmark threshold is labelled as insufficient coverage in the release, not shipped as if it were production-ready.
+3. **Deterministic empty recall.** The corpus does not invent a matching pattern where none exists. Weak or empty recall is a first-class benchmark result: those queries must return no strong hit, every time, with no post-hoc score inflation to avoid an empty result. Any gate built on the corpus can then delegate; the funded obligation is that the data makes that choice unavoidable, not optional.
+Ground truth for correct Daml is itself about to start moving, most concretely as OpenZeppelin's forthcoming Canton reference implementations are published and revised. Any tool, generator or checker, that works from a frozen snapshot of that standard drifts out of sync with it silently. These three invariants are what let `canton-corpus-bundle` stay synchronized to a moving standard honestly: republished on a fixed cadence, never presenting thin coverage as a verified match, and saying so plainly whenever it can't.
  
 ---
  
 ## Relationship to Existing Tools
  
-`daml_reason` occupies a different layer of the development workflow than existing AI-assisted Daml tools such as Tenzro's Daml Studio. Generation and verification are different specializations: one produces code from intent, the other checks code against a maintained body of verified precedentuse in. `daml_reason` does not generate code; it verifies code from any source, including AI-generated Daml from tools like Daml Studio, against `canton-corpus-bundle`, and is explicit about where its own confidence is low.
+`daml_reason` occupies a different layer of the development workflow than existing AI-assisted Daml tools such as Tenzro's Daml Studio. Generation and verification are different specializations: one produces code from intent, the other checks code against a maintained body of verified precedent. `daml_reason` does not generate code; it verifies code from any source, including AI-generated Daml from tools like Daml Studio, against `canton-corpus-bundle`, and is explicit about where its own confidence is low.
  
 This complementary relationship is not hypothetical. Tenzro has expressed interest in consuming the correctness gate as a downstream check on Daml Studio's output rather than building an equivalent verification layer themselves. That's the intended shape of ecosystem adoption this proposal is built around: one openly maintained corpus, checkable by any Daml generator, rather than each tool maintaining its own closed verification logic.
  
@@ -70,14 +70,14 @@ This complementary relationship is not hypothetical. Tenzro has expressed intere
  
 ### 1. Objective
  
-**The problem:** There is currently no systematic, automated quality gate for Daml smart contracts. AI-assisted coding tools can generate Daml that compiles correctly but contains subtle authorization flaws, incorrect party relationships, or business logic inconsistencies that only manifest in production. Human code review catches some of these issues but is inconsistent, expensive, and does not scale as autonomous agent-driven Daml generation becomes more common.
+**The problem:** There is currently no openly available, systematically maintained corpus that any tool can check generated Daml against. AI-assisted coding tools can generate Daml that compiles correctly but contains subtle authorization flaws, incorrect party relationships, or business logic inconsistencies that only manifest in production. Human code review catches some of these issues, but the volume of code entering the pipeline is already outgrowing what manual review can absorb at scale.
  
-**The intended outcome:** An openly licensed corpus, plus a production-grade correctness gate built on it, that together:
-- Analyse any Daml code submission against a systematically maintained corpus of production-verified patterns
-- Identify authorization flaws, business logic inconsistencies, and deviations from canonical patterns with a calibrated confidence score and traceable basis
-- Ground the verification layer in data any team can build against, whether or not they use ChainSafe's own hosted gate
-- Integrate into the IDE (VS Code / Cursor), CI/CD pipelines, and the Canton developer workflow as a standard quality checkpoint
-- Provide honest, calibrated uncertainty by explicitly signalling when corpus coverage is insufficient rather than producing false confidence
+**The intended outcome:** A versioned, openly licensed corpus of production-verified Daml patterns that any team can query, fork, or build a gate against:
+- Cover the core Daml taxonomy with verified patterns, anti-patterns, and tests
+- Expose retrieval quality that is independently measurable via a public benchmark suite
+- Remain usable without ChainSafe's hosted gate: download a release, point a Chroma instance at it, and query
+- Signal coverage gaps honestly: taxonomy nodes without sufficient evidence are labelled as such, not padded
+- Ship on a fixed cadence so downstream tools stay synchronized to current ground truth
 ### 2. System Components
  
 **`canton-corpus-bundle`** (primary deliverable): the corpus of verified Daml patterns, anti-patterns, and tests, organized by taxonomy node, published as versioned releases under CC-BY-SA 4.0. Currently operational but small: reliable on basic asset transfer and simple authorization patterns, low-confidence on novel multi-party workflows, governance, and upgrade scenarios. This proposal funds systematic build-out across the full Daml taxonomy:
@@ -88,9 +88,11 @@ This complementary relationship is not hypothetical. Tenzro has expressed intere
 - Contract governance and upgrade patterns
 - Integration patterns
 - Known failure modes as verified negative examples
-Corpus management follows a structured editorial discipline: taxonomy-driven gap identification, benchmark query sets per taxonomy node, embedding space coverage visualisation, and production confidence monitoring as an automatic feedback loop. The full methodology is visible in the open `canton-corpus` repository.
+Corpus management follows a structured editorial discipline: taxonomy-driven gap identification, benchmark query sets per taxonomy node, embedding space coverage visualisation, and coverage monitoring as an automatic feedback loop. The full methodology is visible in the open `canton-corpus` repository.
  
-**`canton-mcp-go-server`**: ChainSafe's implementation of the `daml_reason` MCP interface, written in Go. The tool operates in two phases: Phase A receives a business intent and retrieves matching patterns from the corpus; Phase B receives the drafted Daml code alongside the intent, optionally with the client's compile result, and returns a verdict. Semantic retrieval over `canton-corpus-bundle` uses vector embeddings with polarity filtering, ensuring anti-patterns and test oracles are excluded from what gets recommended. Compile-result interpretation (reading the client's `succeeded`/`exitCode` hard signal) is live. The semantic alignment gate, scoring how well submitted code actually matches the stated business intent, is in active development and is the primary deliverable this grant funds hardening. This is the convenience layer ChainSafe provides to get verdicts to an agent in practice, low latency, integrated auth, reliability guarantees. It is not open-sourced and not funded by this grant; the engineering effort behind it is ChainSafe's own investment, described here only so the boundary between what's funded and what isn't is unambiguous.
+**`canton-mcp-go-server`**: ChainSafe's implementation of the `daml_reason` MCP interface, written in Go. The tool operates in two phases: Phase A receives a business intent and retrieves matching patterns from the corpus; Phase B receives the drafted Daml code alongside the intent, optionally with the client's compile result, and returns a verdict. Semantic retrieval over `canton-corpus-bundle` uses vector embeddings with polarity filtering, ensuring anti-patterns and test oracles are excluded from what gets recommended. Compile-result interpretation (reading the client's `succeeded`/`exitCode` hard signal) is live. The semantic alignment gate, scoring how well submitted code actually matches the stated business intent, is in active development, entirely as ChainSafe's own engineering investment and independent of this grant.
+
+`daml_reason`, ChainSafe's hosted deployment of this server, is a convenience layer, not the funded good. It exists so a team can get a corpus-grounded verdict with low latency, integrated auth, and reliability guarantees, without operating any infrastructure themselves. It is one way to consume `canton-corpus-bundle`, not the only way. Any team can instead skip it entirely: pull a versioned release, point a Chroma instance at the manifest, and write their own retrieval and scoring logic against the same open data, inside their own IDE plugin, CI check, or competing product. `canton-mcp-go-server` is not open-sourced and receives no funding from this grant. It is described here only so the boundary between what this grant pays for, the corpus, and what ChainSafe funds on its own, the convenience layer built on top of it, is unambiguous.
  
 **`daml_reason` output**: when invoked with a business intent and optional Daml code, the tool returns a structured response. The calling agent is responsible for interpreting the output and determining how to present or act on it; `daml_reason` delivers grounded truth, not editorial judgment.
 
@@ -104,13 +106,13 @@ Corpus management follows a structured editorial discipline: taxonomy-driven gap
  
 **How the corpus is consumed:** `canton-corpus-bundle` is a versioned GitHub release artifact, a Chroma-compatible vector store plus an oracle index and a manifest. Any team can download a release, point a Chroma instance at it, and query patterns directly, no ChainSafe involvement required. MCP clients, IDE plugins, CI checks, and competitor products are all equally valid consumers of the same open artifact. The semantic contract the corpus exposes is documented in the manifest schema, which is the only interface the funded work commits to.
 
-**IDE and CI/CD integrations** (convenience layer, not the funded good): Cursor and any MCP-compatible environment can invoke `daml_reason` on-demand; a GitHub Actions plugin invokes it on every pull request touching Daml files. Teams set a minimum confidence score required to merge; below-threshold results block the merge with a structured report. When compilation is not available client-side, `daml_reason` back-delegates explicitly rather than attempting a verdict without compile signal. These integrations work against whichever MCP server the team points them at, including one they run themselves from the open bundle.
+**IDE and CI/CD integrations** (convenience layer, not the funded good): any MCP-compatible environment can call a `daml_reason`-compatible tool on-demand; any CI system can do the same on pull requests that touch Daml files. Those clients work against whichever implementation the team points them at, including one they run themselves from the open bundle. When compilation is not available client-side, an honest implementation back-delegates rather than attempting a verdict without a compile signal.
 
-**ChainSafe's hosted deployment** (out of scope for this grant): ChainSafe operates a production instance of `canton-mcp-server` since March 2026. Teams that want a fully managed, authenticated, SLA-backed endpoint pay ChainSafe for that. Teams that want to self-host can do so from the public bundle release. The funded obligation is that the corpus keeps shipping, under its open license, regardless of what any single company does with it.
+**ChainSafe's hosted deployment** (out of scope for this grant): ChainSafe operates a production instance of `canton-mcp-go-server` since March 2026. Teams that want a fully managed, authenticated, SLA-backed endpoint pay ChainSafe for that. Teams that want to self-host can do so from the public bundle release. The funded obligation is that the corpus keeps shipping, under its open license, regardless of what any single company does with it.
  
 ### 3. Architectural Alignment
  
-`daml_reason` operates at the application layer of the Canton ecosystem. It does not modify the Canton protocol, the ledger, or any existing Canton infrastructure, and introduces no new consensus, ledger, or party-rights semantics. It is a pre-deployment verification service that sits between the developer's environment and the Canton ledger.
+`canton-corpus-bundle` is consumed at the application layer of the Canton ecosystem. It does not modify the Canton protocol, the ledger, or any existing Canton infrastructure, and introduces no new consensus, ledger, or party-rights semantics. A gate built on it is a pre-deployment check that sits between the developer's environment and the Canton ledger; this proposal funds the data that check runs against, not the check itself.
  
 **Alignment with Canton ecosystem priorities:**
 - **Developer experience:** Lowers the barrier to safe Daml development, particularly for teams new to the Canton model or using AI-assisted code generation
@@ -164,7 +166,7 @@ Each milestone is a corpus release. The gate that keeps each release honest is t
 ### Milestone 4: Sustained Cadence and Demonstrated Ecosystem Adoption
 - **Estimated Delivery:** Week 22
 - **Deliverables / Value Metrics:**
-  - `canton-corpus-bundle` v4 published, demonstrating a sustained quarterly release cadence
+  - `canton-corpus-bundle` v4 published, demonstrating a sustained release cadence across the project window
   - Demonstrated ecosystem adoption: at least 5 distinct teams or projects consuming `canton-corpus-bundle` in an active pipeline, regardless of which server or client they use to do so
   - Public technical write-up on the corpus methodology, covering how patterns are sourced, validated, and promoted
 ---
@@ -175,7 +177,7 @@ The Tech & Ops Committee will evaluate completion based on:
 - Four versioned `canton-corpus-bundle` releases published on schedule, each under CC-BY-SA 4.0, independently forkable and usable without ChainSafe's server
 - Each release accompanied by benchmark results on record, showing retrieval quality at or above the specified threshold (90% of queries at ≥0.75 confidence)
 - Monotonic promotion demonstrated: no release regresses benchmark quality from the prior one
-- Corpus coverage expanded across the full Daml taxonomy as documented in each release's coverage delta report
+- Corpus coverage expanded across the full Daml taxonomy, documented in the coverage reports that accompany releases after v1
 - Contribution process documented and publicly available by Milestone 3
 - Demonstrated ecosystem adoption: at least 5 teams or projects using the corpus artifact by Milestone 4
 ---
@@ -223,7 +225,7 @@ An open corpus, embedded into the standard Daml workflow, changes the economics 
  
 There is a second benefit worth naming explicitly. Twelve years of Daml documentation, SDK changelogs, reference implementations, and legacy integration guides exist in a form that is technically complete but practically unnavigable. New developers onboarding to the network today face a documentation surface too large to read and too poorly indexed to search effectively. Building the corpus is, by definition, the act of distilling that accumulated knowledge into something openly queryable. Every gap identified is a gap in accessible Daml knowledge. Every document added, and published, is a piece of that knowledge made findable and forkable by the whole ecosystem, independent of any single company's continued involvement.
  
-ChainSafe's `daml_reason` deployment is one product built on top of this open corpus, funded and operated independently of this grant. We expect and welcome others, to build their own tools against the same open data.
+ChainSafe's `daml_reason` deployment is one product built on top of this open corpus, funded and operated independently of this grant. We expect and welcome others to build their own tools against the same open data.
  
 ---
  
@@ -236,7 +238,7 @@ Rule-based analysis catches known anti-patterns but cannot assess whether code c
 Frontier models have seen Daml code during training, undifferentiated from broken examples, outdated patterns, and forum posts where someone was asking why their code was wrong. Fine-tuned code-generation models bake a fixed set of examples into opaque model weights: not updatable without retraining, and not traceable to a specific source pattern. An open, versioned corpus is auditable, updatable without retraining, and lets any tool built on it, including a fine-tuned generator's own output, be checked against a calibrated confidence score and an honest low-confidence signal when coverage is thin.
  
 **Why is the server not open, if the corpus is?**
-The corpus is what makes the verification claim checkable: anyone can inspect what "verified pattern" means, dispute an entry, or build against it. The server is where ChainSafe's own engineering investment goes into making that corpus usable in practice for an agent in real time, authentication, latency, billing, reliability. Keeping it as ChainSafe's product doesn't restrict the public good the grant funds, since the corpus is what any alternative implementation would actually need, and nothing in this proposal stops another team from building their own server against the same open data. The grant guarantees the data can't be taken hostage by any single company's continued involvement. It does not guarantee that ChainSafe's specific implementation of the gate is replicable, and that boundary is deliberate: it's the difference between funding a commons and funding a competitor to ChainSafe's own product.
+The corpus is what makes the verification claim checkable: anyone can inspect what "verified pattern" means, dispute an entry, or build against it. The server is where ChainSafe's own engineering investment goes into making that corpus usable in practice for an agent in real time: authentication, latency, reliability. Keeping it as ChainSafe's product doesn't restrict the public good the grant funds, since the corpus is what any alternative implementation would actually need, and nothing in this proposal stops another team from building their own server against the same open data. The grant guarantees the data can't be taken hostage by any single company's continued involvement. It does not guarantee that ChainSafe's specific implementation of the gate is replicable, and that boundary is deliberate: it's the difference between funding a commons and funding a competitor to ChainSafe's own product.
  
 **Why the MCP interface?**
 MCP is the emerging standard for tool integration in AI-assisted developer environments. Implementing the gate as an MCP server means it integrates natively with Cursor, Claude Code, and any other MCP-compatible environment without custom integration work, and positions it correctly as verification infrastructure callable by autonomous agents, not only by human developers.

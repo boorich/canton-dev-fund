@@ -2,7 +2,9 @@
 **Author:** ChainSafe Systems / daml_reason Team
 **Status:** Draft
 **Created:** 2026-03-24
-**Revised:** 2026-09-22
+**Revised:** 2026-09-24
+**Proposal Type:** RFP-aligned
+**RFP / Roadmap Area:** [RFP 22, Daml Security Standards and Secure Development](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L238) ([Security, Assurance & Incident Readiness](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#security-assurance--incident-readiness)). Secondary signal only: [RFP 3, Automated Application Management](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L81).
 **Label:** daml-tooling
 **Champion:** Need Champion
  
@@ -10,7 +12,7 @@
  
 ## Summary
  
-This proposal funds `canton-corpus-bundle`: a versioned, openly licensed corpus of production-verified Daml patterns. Any correctness gate built on that corpus answers one question: does this code match the stated business intent, checked against the published patterns, and how confident is that answer. When the corpus does not cover the case in front of it, an honest consumer says so and hands off to a human, rather than guessing.
+This proposal responds to **RFP 22** (Daml Security Standards and Secure Development). It funds `canton-corpus-bundle`: a versioned, openly licensed corpus of production-verified Daml patterns, anti-patterns, and tests. Any correctness gate built on that corpus answers one question: does this code match the stated business intent, checked against the published patterns, and how confident is that answer. When the corpus does not cover the case in front of it, an honest consumer says so and hands off to a human, rather than guessing.
  
 The system has four layers, and this proposal only funds one of them:
  
@@ -28,7 +30,23 @@ flowchart LR
 ChainSafe operates a hosted, authenticated deployment of `canton-mcp-go-server` under the `daml_reason` name. That commercial deployment is not funded by this grant. What the grant guarantees is that `canton-corpus-bundle` itself, the verified patterns, anti-patterns, and tests, can never be taken hostage by ChainSafe's continued involvement: the data is open regardless of what happens to any single company operating on top of it. It does not guarantee that ChainSafe's specific server is replicable, and that boundary is intentional, not an oversight.
  
 This proposal was first submitted to this fund in March 2026 as "Daml Autopilot." The problem it addresses, no systematic, automated correctness check for AI-generated Daml, remains unaddressed by any other public tooling six months later, and the volume of AI-generated Daml reaching production has grown in that interval, not shrunk.
- 
+
+---
+
+## RFP Mapping and Ecosystem Need
+
+**Primary: [RFP 22, Daml Security Standards and Secure Development](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L238).** The RFP asks for "automated analysis, security-focused linting or static analysis, common vulnerability patterns, review checklists, reference implementations" that help application developers "consistently identify and prevent security weaknesses before Daml packages are deployed or vetted." That is the job of this corpus: a maintained reference of verified patterns and anti-patterns, published as benchmark-gated releases, usable as a pre-deployment checkpoint by any tool. This proposal does not claim to be a full security standard or a substitute for audit. It is the shared reference material and common vulnerability patterns that those later standards and tools can check against.
+
+**Secondary, and weaker: [RFP 3, Automated Application Management](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L81).** That RFP funds Validator-node tooling for application discovery, review, and security analysis tied to parties vetting or unvetting Daml packages. This proposal does not build that node-level tooling. Corpus verdicts are a signal that such vetting tooling could later consume: a reusable, versioned pre-vetting check, not a one-off IDE convenience.
+
+**Who benefits, and how this drives adoption:**
+- **Application developers**, especially teams new to Daml's authorization model or using AI-assisted generation, get a shared, queryable body of verified precedent they can check against before a package is deployed or vetted.
+- **Code generators and IDE tools** (Daml Studio and any later equivalent) can consume one open corpus instead of each maintaining closed verification logic.
+- **Reviewers** get a triage layer that narrows what reaches human attention, without replacing audit.
+- **The network** gets fewer packages reaching vetting with uncaught authorization and party-rights mistakes, because the check sits before deploy and vet, which is the moment RFP 22 names.
+
+Adoption is gated in the milestones themselves: 3 community developers using the corpus by Milestone 2, 5 distinct teams or projects consuming the artifact by Milestone 4, regardless of which server or client they use.
+
 ---
  
 ## Scope: What This Is and Isn't
@@ -60,7 +78,7 @@ Ground truth for correct Daml is itself about to start moving, most concretely a
  
 ## Relationship to Existing Tools
  
-`daml_reason` occupies a different layer of the development workflow than existing AI-assisted Daml tools such as Tenzro's Daml Studio. Generation and verification are different specializations: one produces code from intent, the other checks code against a maintained body of verified precedent. `daml_reason` does not generate code; it verifies code from any source, including AI-generated Daml from tools like Daml Studio, against `canton-corpus-bundle`, and is explicit about where its own confidence is low.
+`daml_reason` occupies a different layer of the development workflow than existing AI-assisted Daml tools such as Tenzro's Daml Studio or 5North'S Seaport. Generation and verification are different specializations: one produces code from intent, the other checks code against a maintained body of verified precedent. `daml_reason` does not generate code; it verifies code from any source, including AI-generated Daml from tools like Daml Studio, against `canton-corpus-bundle`, and is explicit about where its own confidence is low. That is the RFP 22 split: generators write packages, this corpus is the shared check that runs before those packages are deployed or vetted.
  
 This complementary relationship is not hypothetical. Tenzro has expressed interest in consuming the correctness gate as a downstream check on Daml Studio's output rather than building an equivalent verification layer themselves. That's the intended shape of ecosystem adoption this proposal is built around: one openly maintained corpus, checkable by any Daml generator, rather than each tool maintaining its own closed verification logic.
  
@@ -70,7 +88,7 @@ This complementary relationship is not hypothetical. Tenzro has expressed intere
  
 ### 1. Objective
  
-**The problem:** There is currently no openly available, systematically maintained corpus that any tool can check generated Daml against. AI-assisted coding tools can generate Daml that compiles correctly but contains subtle authorization flaws, incorrect party relationships, or business logic inconsistencies that only manifest in production. Human code review catches some of these issues, but the volume of code entering the pipeline is already outgrowing what manual review can absorb at scale.
+**The problem:** There is currently no openly available, systematically maintained corpus that any tool can check generated Daml against *before Daml packages are deployed or vetted*. AI-assisted coding tools can generate Daml that compiles correctly but contains subtle authorization flaws, incorrect party relationships, or business logic inconsistencies that only manifest in production. Human code review catches some of these issues, but the volume of code entering the pipeline is already outgrowing what manual review can absorb at scale.
  
 **The intended outcome:** A versioned, openly licensed corpus of production-verified Daml patterns that any team can query, fork, or build a gate against:
 - Cover the core Daml taxonomy with verified patterns, anti-patterns, and tests
@@ -115,6 +133,7 @@ Corpus management follows a structured editorial discipline: taxonomy-driven gap
 `canton-corpus-bundle` is consumed at the application layer of the Canton ecosystem. It does not modify the Canton protocol, the ledger, or any existing Canton infrastructure, and introduces no new consensus, ledger, or party-rights semantics. A gate built on it is a pre-deployment check that sits between the developer's environment and the Canton ledger; this proposal funds the data that check runs against, not the check itself.
  
 **Alignment with Canton ecosystem priorities:**
+- **RFP 22:** Shared reference patterns, anti-patterns, and benchmarked retrieval so developers can identify security weaknesses before packages are deployed or vetted
 - **Developer experience:** Lowers the barrier to safe Daml development, particularly for teams new to the Canton model or using AI-assisted code generation
 - **Production safety:** Addresses a real gap in tooling for teams deploying Daml to production Canton networks, ahead of the volume growth described above, not in reaction to it
 - **Ecosystem growth:** An open corpus means the verification layer's actual substance, the verified patterns and their provenance, is something the whole developer ecosystem can build on, not something any team has to trust a single company to maintain indefinitely

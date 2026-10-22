@@ -2,7 +2,7 @@
 **Author:** ChainSafe Systems / daml_reason Team
 **Status:** Draft
 **Created:** 2026-03-24
-**Revised:** 2026-09-24
+**Revised:** 2026-10-22
 **Proposal Type:** RFP-aligned
 **RFP / Roadmap Area:** [RFP 22, Daml Security Standards and Secure Development](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L238) ([Security, Assurance & Incident Readiness](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#security-assurance--incident-readiness)). Secondary signal only: [RFP 3, Automated Application Management](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L81).
 **Label:** daml-tooling
@@ -40,7 +40,7 @@ This proposal was first submitted to this fund in March 2026 as "Daml Autopilot.
 **Secondary, and weaker: [RFP 3, Automated Application Management](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L81).** That RFP funds Validator-node tooling for application discovery, review, and security analysis tied to parties vetting or unvetting Daml packages. This proposal does not build that node-level tooling. Corpus verdicts are a signal that such vetting tooling could later consume: a reusable, versioned pre-vetting check, not a one-off IDE convenience.
 
 **Who benefits, and how this drives adoption:**
-- **Application developers**, especially teams new to Daml's authorization model or using AI-assisted generation, get a shared, queryable body of verified precedent they can check against before a package is deployed or vetted.
+- **Application developers**, especially teams new to Daml's authorization model or using AI-assisted generation, get a shared, queryable body of verified precedent they can check against before a package is deployed or vetted, including by adding the DPM component and querying the local bundle through `dpm`.
 - **Code generators and IDE tools** (Daml Studio and any later equivalent) can consume one open corpus instead of each maintaining closed verification logic.
 - **Reviewers** get a triage layer that narrows what reaches human attention, without replacing audit.
 - **The network** gets fewer packages reaching vetting with uncaught authorization and party-rights mistakes, because the check sits before deploy and vet, which is the moment RFP 22 names.
@@ -124,6 +124,15 @@ Corpus management follows a structured editorial discipline: taxonomy-driven gap
  
 **How the corpus is consumed:** `canton-corpus-bundle` is a versioned GitHub release artifact, a Chroma-compatible vector store plus an oracle index and a manifest. Any team can download a release, point a Chroma instance at it, and query patterns directly, no ChainSafe involvement required. MCP clients, IDE plugins, CI checks, and competitor products are all equally valid consumers of the same open artifact. The semantic contract the corpus exposes is documented in the manifest schema, which is the only interface the funded work commits to.
 
+**DPM component** (official CLI path, Apache 2.0): [DPM](https://docs.canton.network/sdks-tools/cli-tools/dpm#dpm-daml-package-manager) is the standard CLI for Canton smart contract development. From [DPM 1.0.21](https://forum.canton.network/t/dpm-components-extend-the-canton-developer-stack/8822) it accepts community components the way Hardhat accepts plugins. A DPM component is a published OCI artifact: `component.yaml`, one or more platform binaries, and optional data directories that `dpm` restores on install and then launches as `dpm <command>`.
+
+This proposal ships such a component for the corpus. It is not an install stub. It packages:
+- a published `canton-corpus-bundle` (Chroma HNSW store, manifest, oracles), either pinned inside the OCI artifact or fetched to the local DPM component cache on first use / update
+- a native retrieval CLI, built on the existing Go corpus store (chroma-go + ONNX MiniLM), exposed through `component.yaml` as one or more `dpm` commands (search / recall against the local bundle)
+- the embedding weights the query path needs, so a cold install can run offline after the first fetch
+
+Publishing is platform-aware (`darwin/arm64`, `linux/amd64`, and the other hosts DPM expects), following [DPM component conventions](https://docs.canton.network/sdks-tools/cli-tools/dpm#publishing-components). A developer who already uses `dpm build` / `dpm test` can add the component to a project, then query the corpus locally without ChainSafe's hosted server and without wiring Chroma by hand. The component is the official-CLI delivery and local query path for the open artifact, not a second funded product and not a substitute for downloading the GitHub release directly. It also answers the [RFP 19](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L208) ask for reusable DPM components that make it easier to build and test Canton applications.
+
 **IDE and CI/CD integrations** (convenience layer, not the funded good): any MCP-compatible environment can call a `daml_reason`-compatible tool on-demand; any CI system can do the same on pull requests that touch Daml files. Those clients work against whichever implementation the team points them at, including one they run themselves from the open bundle. When compilation is not available client-side, an honest implementation back-delegates rather than attempting a verdict without a compile signal.
 
 **ChainSafe's hosted deployment** (out of scope for this grant): ChainSafe operates a production instance of `canton-mcp-go-server` since March 2026. Teams that want a fully managed, authenticated, SLA-backed endpoint pay ChainSafe for that. Teams that want to self-host can do so from the public bundle release. The funded obligation is that the corpus keeps shipping, under its open license, regardless of what any single company does with it.
@@ -134,6 +143,7 @@ Corpus management follows a structured editorial discipline: taxonomy-driven gap
  
 **Alignment with Canton ecosystem priorities:**
 - **RFP 22:** Shared reference patterns, anti-patterns, and benchmarked retrieval so developers can identify security weaknesses before packages are deployed or vetted
+- **DPM / official CLI:** A published DPM component puts those patterns on the path named as the standard Canton developer stack: installable from `dpm`, queryable locally, reusable across projects, documented, and independent of any one hosted server
 - **Developer experience:** Lowers the barrier to safe Daml development, particularly for teams new to the Canton model or using AI-assisted code generation
 - **Production safety:** Addresses a real gap in tooling for teams deploying Daml to production Canton networks, ahead of the volume growth described above, not in reaction to it
 - **Ecosystem growth:** An open corpus means the verification layer's actual substance, the verified patterns and their provenance, is something the whole developer ecosystem can build on, not something any team has to trust a single company to maintain indefinitely
@@ -149,7 +159,7 @@ Corpus management follows a structured editorial discipline: taxonomy-driven gap
 Modelled on the structure used in the OpenZeppelin Canton ecosystem proposal.
  
 - **`canton-corpus-bundle`**: CC-BY-SA 4.0, published as versioned releases to a public repository, starting with the Milestone 1 delivery. This is the funded public good.
-- **Benchmark suite, coverage audit scripts, and embedding visualisation tooling** (the methodology used to validate the corpus, not the gate itself): Apache 2.0, so corpus quality claims are independently checkable by anyone, not just verifiable by trusting ChainSafe's own reporting.
+- **Benchmark suite, coverage audit scripts, embedding visualisation tooling, and the DPM component** (the methodology and the official-CLI install-and-query path, not the gate itself): Apache 2.0, so corpus quality claims are independently checkable and the bundle is queryable through DPM without trusting ChainSafe's hosted server.
 - **`canton-mcp-go-server`**: ChainSafe's product. Not open-sourced, not funded by this grant. It is the convenience layer that delivers corpus-grounded verdicts to an agent, with authentication and SLA-grade hosting on top.
 This split bounds the obligation this grant creates to the corpus and its open publication, not to indefinite unfunded maintenance of a commercial service. If ChainSafe's involvement ends for any reason, the published corpus remains forkable and usable under its stated license, and the benchmark tooling that validates it remains independently runnable, which is the specific risk the Dev Fund's "reduces reliance on any single organization" principle is meant to address. It addresses reliance on the data, not on ChainSafe's specific server; that's a narrower guarantee than an open-core split would offer, and it's the one being proposed here.
  
@@ -157,7 +167,7 @@ This split bounds the obligation this grant creates to the corpus and its open p
  
 ## Milestones and Deliverables
 
-Each milestone is a corpus release. The gate that keeps each release honest is the benchmark suite; the funded obligation is to pass it before publishing, not to pass it once. ChainSafe's server is not a deliverable in any milestone.
+Each milestone is a corpus release. The gate that keeps each release honest is the benchmark suite; the funded obligation is to pass it before publishing, not to pass it once. ChainSafe's server is not a deliverable in any milestone. The DPM component is how a published release is installed and queried through the official Canton CLI.
 
 ### Milestone 1: First Corpus Release
 - **Estimated Delivery:** Week 6
@@ -173,6 +183,7 @@ Each milestone is a corpus release. The gate that keeps each release honest is t
   - `canton-corpus-bundle` v2 published, with documented taxonomy gaps closed since v1
   - Coverage delta report: which nodes improved and by how much
   - Quick-start guide for consuming `canton-corpus-bundle` directly, independent of any server
+  - DPM component published under Apache 2.0: OCI artifact with `component.yaml`, platform-native retrieval CLI (Go chroma store + ONNX MiniLM), published or fetched `canton-corpus-bundle`, and embedding weights; exposes local search via `dpm`, documented against the [DPM component](https://docs.canton.network/sdks-tools/cli-tools/dpm#publishing-components) conventions
   - At least 3 Canton community developers using the corpus in active development, with documented feedback
 
 ### Milestone 3: Third Release and Contribution Process
@@ -186,7 +197,7 @@ Each milestone is a corpus release. The gate that keeps each release honest is t
 - **Estimated Delivery:** Week 22
 - **Deliverables / Value Metrics:**
   - `canton-corpus-bundle` v4 published, demonstrating a sustained release cadence across the project window
-  - Demonstrated ecosystem adoption: at least 5 distinct teams or projects consuming `canton-corpus-bundle` in an active pipeline, regardless of which server or client they use to do so
+  - Demonstrated ecosystem adoption: at least 5 distinct teams or projects consuming `canton-corpus-bundle` in an active pipeline, including via the DPM component, regardless of which server or client they use to do so
   - Public technical write-up on the corpus methodology, covering how patterns are sourced, validated, and promoted
 ---
  
@@ -194,6 +205,7 @@ Each milestone is a corpus release. The gate that keeps each release honest is t
  
 The Tech & Ops Committee will evaluate completion based on:
 - Four versioned `canton-corpus-bundle` releases published on schedule, each under CC-BY-SA 4.0, independently forkable and usable without ChainSafe's server
+- DPM component published and documented: installs or fetches a published bundle and exposes local retrieval through the official Canton CLI
 - Each release accompanied by benchmark results on record, showing retrieval quality at or above the specified threshold (90% of queries at ≥0.75 confidence)
 - Monotonic promotion demonstrated: no release regresses benchmark quality from the prior one
 - Corpus coverage expanded across the full Daml taxonomy, documented in the coverage reports that accompany releases after v1
@@ -212,7 +224,7 @@ This covers six months of fully-loaded team costs for the corpus build-out and i
 | Milestone | Deliverable | USD | CC Payment |
 |---|---|---|---|
 | Milestone 1 | First corpus release, benchmark infrastructure, coverage tooling | ~$22,500 | 155,250 CC |
-| Milestone 2 | Second corpus release, coverage delta report, quick-start guide | ~$22,500 | 155,250 CC |
+| Milestone 2 | Second corpus release, coverage delta, DPM install-and-query component, quick-start guide | ~$22,500 | 155,250 CC |
 | Milestone 3 | Third corpus release, contribution process documented | ~$22,500 | 155,250 CC |
 | Milestone 4 | Fourth corpus release, sustained cadence, ecosystem adoption demonstrated | ~$22,500 | 155,250 CC |
 | **Total** | | **~$90,000** | **621,000 CC** |

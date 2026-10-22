@@ -215,25 +215,27 @@ The Tech & Ops Committee will evaluate completion based on:
  
 ## Funding
  
-**Total Funding Request:** 621,000 CC
+**Total Funding Request:** 882,352 CC (~$90,000 USD)
  
-This covers six months of fully-loaded team costs for the corpus build-out and its open publication pipeline: one senior ML engineer with production RAG and Daml domain expertise ($150,000/year), 0.5 FTE DevOps (€48,000/year), and AI tooling (€6,000/year), totalling approximately $90,000 over the project duration. CC amounts are calculated at the rate prevailing at submission ($0.145 USD/CC), giving 621,000 CC total, paid in four equal instalments of 155,250 CC on milestone completion. None of this funding is applied to `canton-mcp-go-server`, ChainSafe's hosted deployment, or its SLA infrastructure, which ChainSafe funds and operates independently.
+The budget for this work is approximately **$90,000 USD**. That is the planned cost of the project, not a CC figure that floats with the market. CC amounts below are the conversion of that fixed USD budget at the market rate as of 2026-10-22 ($0.102 USD/CC): 882,352 CC total, paid in four equal instalments of 220,588 CC. This is a pre-vote rate update to hold the original ~$90,000 USD plan; it is not a scope increase and not post-approval fluctuation compensation.
+
+This covers six months of fully-loaded team costs for the corpus build-out and its open publication pipeline: one senior ML engineer with production RAG and Daml domain expertise ($150,000/year), 0.5 FTE DevOps (€48,000/year), and AI tooling (€6,000/year). None of this funding is applied to `canton-mcp-go-server`, ChainSafe's hosted deployment, or its SLA infrastructure, which ChainSafe funds and operates independently.
  
 ### Payment Breakdown by Milestone
  
 | Milestone | Deliverable | USD | CC Payment |
 |---|---|---|---|
-| Milestone 1 | First corpus release, benchmark infrastructure, coverage tooling | ~$22,500 | 155,250 CC |
-| Milestone 2 | Second corpus release, coverage delta, DPM install-and-query component, quick-start guide | ~$22,500 | 155,250 CC |
-| Milestone 3 | Third corpus release, contribution process documented | ~$22,500 | 155,250 CC |
-| Milestone 4 | Fourth corpus release, sustained cadence, ecosystem adoption demonstrated | ~$22,500 | 155,250 CC |
-| **Total** | | **~$90,000** | **621,000 CC** |
+| Milestone 1 | First corpus release, benchmark infrastructure, coverage tooling | ~$22,500 | 220,588 CC |
+| Milestone 2 | Second corpus release, coverage delta, DPM install-and-query component, quick-start guide | ~$22,500 | 220,588 CC |
+| Milestone 3 | Third corpus release, contribution process documented | ~$22,500 | 220,588 CC |
+| Milestone 4 | Fourth corpus release, sustained cadence, ecosystem adoption demonstrated | ~$22,500 | 220,588 CC |
+| **Total** | | **~$90,000** | **882,352 CC** |
 
-Each milestone carries equal weight: one corpus release with its accompanying benchmark results and documentation. CC amounts are equal (155,250 per milestone, 621,000 total) at the rate prevailing at submission ($0.145 USD/CC).
+Each milestone carries equal weight: one corpus release with its accompanying benchmark results and documentation. USD amounts are the planned budget; CC amounts are equal (220,588 per milestone, 882,352 total) at $0.102 USD/CC as of 2026-10-22.
  
 ### Volatility Stipulation
  
-The project duration is under 6 months. The grant is denominated in fixed Canton Coin at the rate prevailing at submission. Should the CC/USD rate decline materially before remaining milestones are paid out, the real value of those payments may be insufficient to cover the stated team costs. In that event, the implementing entity reserves the right to request renegotiation of remaining milestone amounts to reflect actual costs. Should the project timeline extend beyond 6 months due to committee-requested scope changes, all remaining milestones must be renegotiated regardless of rate movement.
+The project duration is under 6 months. The grant is denominated in fixed Canton Coin at the rate used above. The ~$90,000 USD figure is the planned project cost and is not increased if CC rises. Should the CC/USD rate decline materially before remaining milestones are paid out, the real value of those payments may be insufficient to cover the stated team costs. In that event, the implementing entity reserves the right to request renegotiation of remaining milestone amounts to restore the planned USD budget, not to raise it. Should the project timeline extend beyond 6 months due to committee-requested scope changes, all remaining milestones must be renegotiated regardless of rate movement.
  
 ---
  

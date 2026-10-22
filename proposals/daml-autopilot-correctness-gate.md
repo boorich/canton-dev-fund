@@ -45,7 +45,7 @@ This proposal was first submitted to this fund in March 2026 as "Daml Autopilot.
 - **Reviewers** get a triage layer that narrows what reaches human attention, without replacing audit.
 - **The network** gets fewer packages reaching vetting with uncaught authorization and party-rights mistakes, because the check sits before deploy and vet, which is the moment RFP 22 names.
 
-Adoption is gated in the milestones themselves: 3 community developers using the corpus by Milestone 2, 5 distinct teams or projects consuming the artifact by Milestone 4, regardless of which server or client they use.
+Adoption is gated in the milestones themselves: 3 community developers using the corpus by Milestone 2, 5 distinct teams or projects consuming the artifact by Milestone 4 (at least 2 of them Featured Apps on Canton), regardless of which server or client they use.
 
 ---
  
@@ -197,7 +197,7 @@ Each milestone is a corpus release. The gate that keeps each release honest is t
 - **Estimated Delivery:** Week 22
 - **Deliverables / Value Metrics:**
   - `canton-corpus-bundle` v4 published, demonstrating a sustained release cadence across the project window
-  - Demonstrated ecosystem adoption: at least 5 distinct teams or projects consuming `canton-corpus-bundle` in an active pipeline, including via the DPM component, regardless of which server or client they use to do so
+  - Demonstrated ecosystem adoption: at least 5 distinct teams or projects consuming `canton-corpus-bundle` in an active pipeline, including via the DPM component, of which at least 2 are Featured Apps on Canton, regardless of which server or client they use to do so
   - Public technical write-up on the corpus methodology, covering how patterns are sourced, validated, and promoted
 ---
  
@@ -210,7 +210,7 @@ The Tech & Ops Committee will evaluate completion based on:
 - Monotonic promotion demonstrated: no release regresses benchmark quality from the prior one
 - Corpus coverage expanded across the full Daml taxonomy, documented in the coverage reports that accompany releases after v1
 - Contribution process documented and publicly available by Milestone 3
-- Demonstrated ecosystem adoption: at least 5 teams or projects using the corpus artifact by Milestone 4
+- Demonstrated ecosystem adoption: at least 5 teams or projects using the corpus artifact by Milestone 4, of which at least 2 are Featured Apps on Canton
 ---
  
 ## Funding

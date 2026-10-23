@@ -215,23 +215,23 @@ The Tech & Ops Committee will evaluate completion based on:
  
 ## Funding
  
-**Total Funding Request:** 882,352 CC (~$90,000 USD)
- 
-The budget for this work is approximately **$90,000 USD**. That is the planned cost of the project, not a CC figure that floats with the market. CC amounts below are the conversion of that fixed USD budget at the market rate as of 2026-10-22 ($0.102 USD/CC): 882,352 CC total, paid in four equal instalments of 220,588 CC. This is a pre-vote rate update to hold the original ~$90,000 USD plan; it is not a scope increase and not post-approval fluctuation compensation.
+**Total Funding Request:** 882,352 CC
+
+All milestone payments and the total budget are denominated in Canton Coin. The planned project cost remains approximately $90,000 USD; CC amounts are that fixed USD plan converted at the market rate as of 2026-10-22 ($0.102 USD/CC). Milestone 4 is the adoption milestone and carries at least 40% of the overall CC budget (352,941 CC). Milestones 1–3 split the remainder roughly equally. This is a pre-vote budget layout update; it is not a scope increase.
 
 This covers six months of fully-loaded team costs for the corpus build-out and its open publication pipeline: one senior ML engineer with production RAG and Daml domain expertise ($150,000/year), 0.5 FTE DevOps (€48,000/year), and AI tooling (€6,000/year). None of this funding is applied to `canton-mcp-go-server`, ChainSafe's hosted deployment, or its SLA infrastructure, which ChainSafe funds and operates independently.
  
 ### Payment Breakdown by Milestone
  
-| Milestone | Deliverable | USD | CC Payment |
+| Milestone | Deliverable | Share | CC Payment |
 |---|---|---|---|
-| Milestone 1 | First corpus release, benchmark infrastructure, coverage tooling | ~$22,500 | 220,588 CC |
-| Milestone 2 | Second corpus release, coverage delta, DPM install-and-query component, quick-start guide | ~$22,500 | 220,588 CC |
-| Milestone 3 | Third corpus release, contribution process documented | ~$22,500 | 220,588 CC |
-| Milestone 4 | Fourth corpus release, sustained cadence, ecosystem adoption demonstrated | ~$22,500 | 220,588 CC |
-| **Total** | | **~$90,000** | **882,352 CC** |
+| Milestone 1 | First corpus release, benchmark infrastructure, coverage tooling | ~20% | 176,470 CC |
+| Milestone 2 | Second corpus release, coverage delta, DPM install-and-query component, quick-start guide | ~20% | 176,471 CC |
+| Milestone 3 | Third corpus release, contribution process documented | ~20% | 176,470 CC |
+| Milestone 4 | Fourth corpus release, sustained cadence, ecosystem adoption demonstrated (incl. ≥2 Featured Apps) | ~40% | 352,941 CC |
+| **Total** | | **100%** | **882,352 CC** |
 
-Each milestone carries equal weight: one corpus release with its accompanying benchmark results and documentation. USD amounts are the planned budget; CC amounts are equal (220,588 per milestone, 882,352 total) at $0.102 USD/CC as of 2026-10-22.
+Payments are in CC only. USD equivalence at $0.102 USD/CC is ~$18,000 / ~$18,000 / ~$18,000 / ~$36,000 (total ~$90,000). Milestone 4 meets the adoption-weighting requirement (≥40% of overall budget).
  
 ### Volatility Stipulation
  

@@ -6,7 +6,7 @@
 **Proposal Type:** RFP-aligned
 **RFP / Roadmap Area:** [RFP 22, Daml Security Standards and Secure Development](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L238) ([Security, Assurance & Incident Readiness](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#security-assurance--incident-readiness)). Secondary signal only: [RFP 3, Automated Application Management](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md#L81).
 **Label:** daml-tooling
-**Champion:** Need Champion
+**Champion:** [Jatin Pandya](https://github.com/Jatinp26) (Canton Foundation)
  
 ---
  
